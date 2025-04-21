@@ -156,7 +156,14 @@ sudo systemctl restart mariadb
 ```
 
 ### 🔁 網址轉換：將 moodle-a.lab.com 轉為 moodle-b.lab.com
-如將站台搬移或變更 DNS，可使用 CLI 工具進行網址全站替換：
+如將站台搬移或變更 DNS
+
+✅ 請務必先備份資料庫：
+```bash
+mysqldump -u moodlelabuser -p moodle > ~/moodle_backup_before_url_replace.sql
+```
+
+✅ 方法一：使用 --shortenurls 參數（Moodle 4.2 以上支援）
 ```bash
 sudo -u www-data php /var/www/moodle/admin/tool/replace/cli/replace.php \
 --search=https://moodle-a.lab.com \
@@ -164,7 +171,51 @@ sudo -u www-data php /var/www/moodle/admin/tool/replace/cli/replace.php \
 --shortenurls=0
 ```
 
-### ✅ 請務必先備份資料庫：
-```bash
-mysqldump -u moodlelabuser -p moodle > ~/moodle_backup_before_url_replace.sql
+✅ 方法二：修改資料庫內網址（進階）
+
+進入 MySQL 資料庫
+你已知的資料庫連線資訊如下：
 ```
+使用者：moodleuser
+
+密碼：9B5E4EC1F0
+
+資料庫名稱：moodle
+```
+
+請使用以下指令登入 MySQL：
+```bash
+mysql -u moodleuser -p moodle
+```
+
+系統會提示你輸入密碼，輸入：
+```
+9B5E4EC1F0
+```
+
+登入後你會看到類似這樣的提示符號：
+```sql
+mysql>
+```
+
+✅ 執行 SQL 更新語句
+登入後，依序貼上下列每一條指令（可以整段貼入）：
+```sql
+UPDATE mdl_config SET value = REPLACE(value, 'https://moodle-a.lab.com', 'https://moodle-b.lab.com');
+UPDATE mdl_course_sections SET summary = REPLACE(summary, 'https://moodle-a.lab.com', 'https://moodle-b.lab.com');
+UPDATE mdl_label SET intro = REPLACE(intro, 'https://moodle-a.lab.com', 'https://moodle-b.lab.com');
+UPDATE mdl_page SET content = REPLACE(content, 'https://moodle-a.lab.com', 'https://moodle-b.lab.com');
+```
+
+每執行一行都會顯示類似：
+```sql
+Query OK, 2 rows affected (0.02 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+```
+
+✅ 離開 MySQL：
+```sql
+exit
+```
+
+### ⚠️ 本文件為非官方社群指南，與原版 Moodle 專案無任何關聯，僅作為學習與部署參考用途。
