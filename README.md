@@ -1,4 +1,4 @@
-# Moodle 4.5 安裝指南（主機：moodle-a.lab.com）
+# Moodle 4.5 安裝指南
 
 本專案說明如何在 Ubuntu 24.04 環境中部署 Moodle 4.5，搭配 Apache、MariaDB、PHP 8.3，並使用 Let's Encrypt 建立 HTTPS。文末也提供如何將 Moodle 網址從 `moodle-a.lab.com` 轉換為 `moodle-b.lab.com` 的指令。
 
