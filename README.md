@@ -27,35 +27,42 @@ sudo apt update && sudo apt install apache2 mariadb-server php php-{cli,fpm,gd,i
 ---
 
 ### 2️⃣建立 Moodle 資料庫與使用者
+```bash
+sudo mysql -u root -p
+```
 ```sql
 CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'moodlelabuser'@'localhost' IDENTIFIED BY 'Jq82Vx1tTg!#';
 GRANT ALL PRIVILEGES ON moodle.* TO 'moodlelabuser'@'localhost';
 FLUSH PRIVILEGES;
+EXIT;
 ```
 
 ---
 
-### 3️⃣ 下載並部署 Moodle 原始碼
+### 3️⃣ 下載並部署 Moodle 原始碼與設定目錄權限
 ```bash
 cd /opt
 wget https://download.moodle.org/download.php/direct/stable405/moodle-4.5.tgz
 tar -xvzf moodle-4.5.tgz
 sudo mv moodle /var/www/moodle
+sudo chown -R www-data:www-data /var/www/moodle
+sudo chmod -R 755 /var/www/moodle
 ```
 
 ---
 
-### 4️⃣ 建立 Moodle 資料目錄
+### 4️⃣ 建立 Moodle 資料目錄與權限
 ```bash
 sudo mkdir /var/moodledata
 sudo chown -R www-data:www-data /var/moodledata
+sudo chmod -R 770 /var/moodledata
 ```
 
 ---
 
 ### 5️⃣ 設定 Apache 處理端口
-## 🔹 HTTP 設定檔：/etc/apache2/sites-available/moodle.conf
+#### 🔹 HTTP 設定檔：/etc/apache2/sites-available/moodle.conf
 ```apache
 <VirtualHost *:80>
     ServerName moodle-a.lab.com
@@ -112,7 +119,7 @@ Certbot 會自動產生 /etc/apache2/sites-available/moodle-le-ssl.conf，例如
 ### 7️⃣ 瀏覽器開始安裝流程
 進入網站開始設定：
 
-```arduino
+```
 https://moodle-a.lab.com
 ```
 照指引完成安裝，資料目錄請指定為 /var/moodledata，並輸入下列資料庫資訊：
@@ -176,11 +183,13 @@ sudo -u www-data php /var/www/moodle/admin/tool/replace/cli/replace.php \
 進入 MySQL 資料庫
 你已知的資料庫連線資訊如下：
 ```
-使用者：moodleuser
+使用者：moodlelabuser
 
-密碼：9B5E4EC1F0
+密碼：Jq82Vx1tTg!#
 
 資料庫名稱：moodle
+
+
 ```
 
 請使用以下指令登入 MySQL：
@@ -217,5 +226,25 @@ Rows matched: 2  Changed: 2  Warnings: 0
 ```sql
 exit
 ```
+
+---
+
+### 8️⃣ cron 排程說明（補充）
+可以在最後補上：
+
+```bash
+複製程式碼
+sudo crontab -u www-data -e
+```
+加入：
+
+```cron
+複製程式碼
+*/1 * * * * /usr/bin/php /var/www/moodle/admin/cli/cron.php >/dev/null 2>&1
+```
+
+### ⚠️ 安全性提醒建議
+示範的資料庫使用者 moodlelabuser 與密碼 Jq82Vx1tTg!# 
+建議提醒讀者修改為自己隨機密碼
 
 ### ⚠️ 本文件為非官方社群指南，與原版 Moodle 專案無任何關聯，僅作為學習與部署參考用途。
