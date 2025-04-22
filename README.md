@@ -61,7 +61,7 @@ sudo chmod -R 770 /var/moodledata
 
 ---
 
-### 5️⃣ 設定 Apache 處理端口
+### 5️⃣ 設定 Apache 處理 HTTP 端口
 #### 🔹 HTTP 設定檔：/etc/apache2/sites-available/moodle.conf
 ```apache
 <VirtualHost *:80>
@@ -188,8 +188,6 @@ sudo -u www-data php /var/www/moodle/admin/tool/replace/cli/replace.php \
 密碼：Jq82Vx1tTg!#
 
 資料庫名稱：moodle
-
-
 ```
 
 請使用以下指令登入 MySQL：
@@ -233,18 +231,15 @@ exit
 可以在最後補上：
 
 ```bash
-複製程式碼
 sudo crontab -u www-data -e
 ```
 加入：
 
 ```cron
-複製程式碼
 */1 * * * * /usr/bin/php /var/www/moodle/admin/cli/cron.php >/dev/null 2>&1
 ```
 
-### ⚠️ 安全性提醒建議
-示範的資料庫使用者 moodlelabuser 與密碼 Jq82Vx1tTg!# 
-建議提醒讀者修改為自己隨機密碼
+### ⚠️ ⚠️ 安全性提醒
+本文使用的資料庫帳號 moodlelabuser 及密碼 Jq82Vx1tTg!# 僅為範例，實際部署時請務必修改為強密碼，以保障伺服器安全。
 
 ### ⚠️ 本文件為非官方社群指南，與原版 Moodle 專案無任何關聯，僅作為學習與部署參考用途。
