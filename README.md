@@ -194,12 +194,12 @@ sudo -u www-data php /var/www/moodle/admin/tool/replace/cli/replace.php \
 
 請使用以下指令登入 MySQL：
 ```bash
-mysql -u moodleuser -p moodle
+mysql -u moodlelabuser -p moodle
 ```
 
 系統會提示你輸入密碼，輸入：
 ```
-9B5E4EC1F0
+Jq82Vx1tTg!#
 ```
 
 登入後你會看到類似這樣的提示符號：
