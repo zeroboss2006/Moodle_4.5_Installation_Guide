@@ -175,7 +175,7 @@ mysqldump -u moodlelabuser -p moodle > ~/moodle_backup_before_url_replace.sql
 sudo -u www-data php /var/www/moodle/admin/tool/replace/cli/replace.php \
 --search=https://moodle-a.lab.com \
 --replace=https://moodle-b.lab.com \
---shortenurls=0
+--non-interactive
 ```
 
 ✅ 方法二：修改資料庫內網址（進階）
