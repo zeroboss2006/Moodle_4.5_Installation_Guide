@@ -175,7 +175,7 @@ moodle-b.lab.com → 目前的moodle-a.lab.com IP位置
 SSL 憑證（Let’s Encrypt）：
 使用 Certbot 產生新憑證（或更新）：
 ```bash
-sudo certbot --apache -d test-minmax.byi-e.com
+sudo certbot --apache -d moodle-b.lab.com
 ```
 
 #### ✅ 步驟二：修改 Apache 設定
@@ -187,7 +187,7 @@ sudo nano /etc/apache2/sites-available/moodle.conf
 將裡面的 ServerName 改為新的網址：
 ```moodle.conf
 <VirtualHost *:80>
-    ServerName test-minmax.byi-e.com
+    ServerName moodle-b.lab.com
     ...
 </VirtualHost>
 ```
@@ -199,7 +199,7 @@ sudo nano /etc/apache2/sites-available/moodle-le-ssl.conf
 
 ```moodle-le-ssl.conf
 <VirtualHost *:443>
-    ServerName test-minmax.byi-e.com
+    ServerName moodle-b.lab.com
     ...
 </VirtualHost>
 ```
@@ -217,12 +217,12 @@ sudo nano /var/www/html/moodle/config.php
 
 找到以下這行：
 ```php
-$CFG->wwwroot   = 'https://minmax.byi-e.com';
+$CFG->wwwroot   = 'https://moodle-a.lab.com';
 ```
 
 改為：
 ```php
-$CFG->wwwroot   = 'https://test-minmax.byi-e.com';
+$CFG->wwwroot   = 'https://moodle-b.lab.com';
 ```
 儲存後離開。
 
