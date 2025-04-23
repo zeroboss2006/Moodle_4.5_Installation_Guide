@@ -45,9 +45,9 @@ EXIT;
 cd /opt
 wget https://download.moodle.org/download.php/direct/stable405/moodle-4.5.tgz
 tar -xvzf moodle-4.5.tgz
-sudo mv moodle /var/www/moodle
-sudo chown -R www-data:www-data /var/www/moodle
-sudo chmod -R 755 /var/www/moodle
+sudo mv moodle /var/www/html/moodle
+sudo chown -R www-data:www-data /var/www/html/moodle
+sudo chmod -R 755 /var/www/html/moodle
 ```
 
 ---
@@ -66,14 +66,14 @@ sudo chmod -R 770 /var/moodledata
 ```apache
 <VirtualHost *:80>
     ServerName moodle-a.lab.com
-    DocumentRoot /var/www/moodle
+    DocumentRoot /var/www/html/moodle
 
     # 自動轉導至 HTTPS
     Redirect permanent / https://moodle-a.lab.com/
 </VirtualHost>
 ```
 
-### 啟用處理端口：
+#### 啟用處理端口：
 
 ```bash
 sudo a2ensite moodle
@@ -95,9 +95,9 @@ Certbot 會自動產生 /etc/apache2/sites-available/moodle-le-ssl.conf，例如
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
     ServerName moodle-a.lab.com
-    DocumentRoot /var/www/moodle
+    DocumentRoot /var/www/html/moodle
 
-    <Directory /var/www/moodle>
+    <Directory /var/www/html/moodle>
         Options +FollowSymlinks
         AllowOverride All
         Require all granted
@@ -165,20 +165,92 @@ sudo systemctl restart mariadb
 ### 🔁 網址轉換：將 moodle-a.lab.com 轉為 moodle-b.lab.com
 如將站台搬移或變更 DNS
 
-✅ 請務必先備份資料庫：
+#### ✅ 步驟一：設定 DNS 與 SSL 憑證
+DNS 設定：
+到你的 DNS 提供商（如 Cloudflare、gandi、Namecheap 等）新增設定一筆 A 記錄，指向：
+```
+moodle-b.lab.com → 目前的moodle-a.lab.com IP位置
+```
+
+SSL 憑證（Let’s Encrypt）：
+使用 Certbot 產生新憑證（或更新）：
+```bash
+sudo certbot --apache -d test-minmax.byi-e.com
+```
+
+#### ✅ 步驟二：修改 Apache 設定
+編輯原本的 Apache 設定檔 /etc/apache2/sites-available/moodle.conf：
+```bash
+sudo nano /etc/apache2/sites-available/moodle.conf
+```
+
+將裡面的 ServerName 改為新的網址：
+```moodle.conf
+<VirtualHost *:80>
+    ServerName test-minmax.byi-e.com
+    ...
+</VirtualHost>
+```
+
+如果你也啟用了 SSL，檢查 /etc/apache2/sites-available/moodle-le-ssl.conf，也要改：
+```bash
+sudo nano /etc/apache2/sites-available/moodle-le-ssl.conf
+```
+
+```moodle-le-ssl.conf
+<VirtualHost *:443>
+    ServerName test-minmax.byi-e.com
+    ...
+</VirtualHost>
+```
+
+重新啟動 Apache：
+```bash
+sudo systemctl reload apache2
+```
+
+#### ✅ 步驟三：修改 Moodle 設定
+1. 編輯 config.php
+```bash
+sudo nano /var/www/html/moodle/config.php
+```
+
+找到以下這行：
+```php
+$CFG->wwwroot   = 'https://minmax.byi-e.com';
+```
+
+改為：
+```php
+$CFG->wwwroot   = 'https://test-minmax.byi-e.com';
+```
+儲存後離開。
+
+#### ✅ 步驟四：清除快取與重建設定
+進入 Moodle 網站根目錄執行以下指令清快取：
+```bash
+sudo -u www-data /usr/bin/php /var/www/html/moodle/admin/cli/purge_caches.php
+```
+
+#### ✅ 步驟五：更新資料庫中的 URL（如果有內容中包含原網址）
+如果你之前有上傳課程或頁面內文含舊網址，你需要替換 DB 中的網址。
+
+建議使用 Moodle 官方的搜尋與取代工具：
+
+#### ✅ 請務必先備份資料庫：
 ```bash
 mysqldump -u moodlelabuser -p moodle > ~/moodle_backup_before_url_replace.sql
 ```
 
-✅ 方法一：使用 --shortenurls 參數（Moodle 4.2 以上支援）
+##### ✅ 方法一：使用 --shortenurls 參數（Moodle 4.2 以上支援）
 ```bash
-sudo -u www-data php /var/www/moodle/admin/tool/replace/cli/replace.php \
+sudo -u www-data php /var/www/html/moodle/admin/tool/replace/cli/replace.php \
 --search=https://moodle-a.lab.com \
 --replace=https://moodle-b.lab.com \
 --non-interactive
 ```
 
-✅ 方法二：修改資料庫內網址（進階）
+##### ✅ 方法二：修改資料庫內網址（進階）
 
 進入 MySQL 資料庫
 你已知的資料庫連線資訊如下：
@@ -227,7 +299,7 @@ exit
 
 ---
 
-### 8️⃣ cron 排程說明（補充）
+### 🆙 cron 排程說明（補充）
 可以在最後補上：
 
 ```bash
@@ -236,10 +308,10 @@ sudo crontab -u www-data -e
 加入：
 
 ```cron
-*/1 * * * * /usr/bin/php /var/www/moodle/admin/cli/cron.php >/dev/null 2>&1
+*/1 * * * * /usr/bin/php /var/www/html/moodle/admin/cli/cron.php >/dev/null 2>&1
 ```
 
-### ⚠️ ⚠️ 安全性提醒
+## ⚠️ 安全性提醒
 本文使用的資料庫帳號 moodlelabuser 及密碼 Jq82Vx1tTg!# 僅為範例，實際部署時請務必修改為強密碼，以保障伺服器安全。
 
-### ⚠️ 本文件為非官方社群指南，與原版 Moodle 專案無任何關聯，僅作為學習與部署參考用途。
+## ⚠️ 本文件為非官方社群指南，與原版 Moodle 專案無任何關聯，僅作為學習與部署參考用途。
